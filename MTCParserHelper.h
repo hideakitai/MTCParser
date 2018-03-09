@@ -40,11 +40,11 @@ public:
 
 	inline const T& back() const
 	{
-		return *(queue_ + (tail_ - 1) % size_);
+		return *(queue_ + (size_ + tail_ - 1) % size_);
 	}
 	inline T& back()
 	{
-		return *(queue_ + (tail_ - 1) % size_);
+		return *(queue_ + (size_ + tail_ - 1) % size_);
 	}
 
 	inline const T& operator[] (uint8_t index) const
