@@ -1,5 +1,8 @@
 #pragma once
 
+#ifndef RINGQUEUE_H
+#define RINGQUEUE_H
+
 template<typename T, typename size_type = uint32_t>
 class RingQueue
 {
@@ -64,3 +67,4 @@ private:
 	T* queue_;
 };
 
+#endif

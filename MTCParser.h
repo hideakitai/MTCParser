@@ -1,7 +1,7 @@
 #ifndef MTCParser_H
 #define MTCParser_H
 
-#include "MTCParserHelper.h"
+#include "RingQueue.h"
 
 // ---------- Full Frame Message (FFM) ----------
 // F0 7F [chan] 01 [sub - ID 2] hr mn sc fr 0xF7
