@@ -70,10 +70,10 @@ public:
 
 	inline float asSeconds() const
 	{
-		return mtc_.hour * 60. * 60. + mtc_.minute * 60. + mtc_.second + mtc_.frame * MTCFrameSecond[mtc_.type];
+		return mtc_.hour * 60.f * 60.f + mtc_.minute * 60.f + mtc_.second + mtc_.frame * MTCFrameSecond[mtc_.type];
 	}
-	inline float asMillis() const { return asSeconds() * 0.001; }
-	inline float asMicros() const { return asMillis() * 0.001; }
+	inline float asMillis() const { return asSeconds() * 0.001f; }
+	inline float asMicros() const { return asMillis() * 0.001f; }
 	inline int32_t asFrameCount() const { return asSeconds() * MTCFrameRate[mtc_.type]; }
 	inline string asString() const
 	{
