@@ -1,8 +1,6 @@
 #ifndef MTCParser_H
 #define MTCParser_H
 
-#include "RingQueue.h"
-
 // ---------- Full Frame Message (FFM) ----------
 // F0 7F [chan] 01 [sub - ID 2] hr mn sc fr 0xF7
 // -> 0xF0 0x7F 0x7F 0x01 0x01 hh mm ss ff 0xF7
@@ -38,14 +36,14 @@
 //   7 = Hours count MS nibble and SMPTE Type
 //
 // Piece Data byte Significance
-// 0     0000 ffff Frame number lsbits
-// 1     0001 000f Frame number msbit
-// 2     0010 ssss Second lsbits
-// 3     0011 00ss Second msbits
-// 4     0100 mmmm Minute lsbits
-// 5     0101 00mm Minute msbits
-// 6     0110 hhhh Hour lsbits
-// 7     0111 0rrh Rate and hour msbit
+// 0	 0000 ffff Frame number lsbits
+// 1	 0001 000f Frame number msbit
+// 2	 0010 ssss Second lsbits
+// 3	 0011 00ss Second msbits
+// 4	 0100 mmmm Minute lsbits
+// 5	 0101 00mm Minute msbits
+// 6	 0110 hhhh Hour lsbits
+// 7	 0111 0rrh Rate and hour msbit
 
 
 class MTCParser
@@ -58,26 +56,25 @@ class MTCParser
 		uint8_t second;
 		uint8_t frame;
 	};
-	
+
 public:
 
-	inline uint8_t available() const { return mtc_packet_.size(); }
-	inline void pop() { mtc_packet_.pop(); }
+	inline bool available() const { return b_available; }
+	inline void pop() { b_available = false; }
 
-	inline uint8_t type() const { return mtc_packet_.front().type; }
-	inline uint8_t hour() const { return mtc_packet_.front().hour; }
-	inline uint8_t minute() const { return mtc_packet_.front().minute; }
-	inline uint8_t second() const { return mtc_packet_.front().second; }
-	inline uint8_t frame() const { return mtc_packet_.front().frame; }
-	
+	inline uint8_t type() const { return mtc_.type; }
+	inline uint8_t hour() const { return mtc_.hour; }
+	inline uint8_t minute() const { return mtc_.minute; }
+	inline uint8_t second() const { return mtc_.second; }
+	inline uint8_t frame() const { return mtc_.frame; }
+
 	inline float asSeconds() const
 	{
-		const auto& t = mtc_packet_.front();
-		return t.hour * 60. * 60. + t.minute * 60. + t.second + t.frame * MTCFrameSecond[t.type];
+		return mtc_.hour * 60. * 60. + mtc_.minute * 60. + mtc_.second + mtc_.frame * MTCFrameSecond[mtc_.type];
 	}
 	inline float asMillis() const { return asSeconds() * 0.001; }
 	inline float asMicros() const { return asMillis() * 0.001; }
-	inline int32_t asFrameCount() const { return asSeconds() * MTCFrameRate[mtc_packet_.front().type]; }
+	inline int32_t asFrameCount() const { return asSeconds() * MTCFrameRate[mtc_.type]; }
 	inline string asString() const
 	{
 		stringstream ss;
@@ -85,13 +82,13 @@ public:
 		if (type() == FPS_29_97)
 			ss << to_string(hour())   << ":"
 			   << to_string(minute()) << ":"
-		       << to_string(second()) << ";" 
-		       << to_string(frame());
+			   << to_string(second()) << ";"
+			   << to_string(frame());
 		else
-			ss << to_string(hour())   << ":" 
-		       << to_string(minute()) << ":" 
-		       << to_string(second()) << ":" 
-		       << to_string(frame());
+			ss << to_string(hour())   << ":"
+			   << to_string(minute()) << ":"
+			   << to_string(second()) << ":"
+			   << to_string(frame());
 
 		return ss.str();
 	}
@@ -179,7 +176,8 @@ public:
 			{
 				if (data == FFM_EOX)
 				{
-					mtc_packet_.push(mtc_buffer_);
+					mtc_ = mtc_buffer_;
+					b_available = true;
 				}
 				else
 				{
@@ -236,7 +234,8 @@ public:
 					{
 						mtc_buffer_.hour |= (value & 0x01) << 4;
 						mtc_buffer_.type = (value >> 1) & 0x03;
-						mtc_packet_.push(mtc_buffer_);
+						mtc_ = mtc_buffer_;
+						b_available = true;
 						clearBuffer();
 						break;
 					}
@@ -257,7 +256,7 @@ private:
 		mtc_buffer_.second = 0xFF;
 		mtc_buffer_.frame = 0xFF;
 	}
-	
+
 	enum class State
 	{
 		// for both
@@ -283,7 +282,7 @@ private:
 		FFM_ID_1 = 0x01,
 		FFM_ID_2 = 0x01,
 		FFM_EOX = 0xF7,
-		
+
 		QFM_Header = 0xF1,
 		QFM_Index_Frame_LSB = 0x00,
 		QFM_Index_Frame_MSB = 0x01,
@@ -294,7 +293,7 @@ private:
 		QFM_Index_Hour_LSB = 0x06,
 		QFM_Index_Hour_MSB = 0x07,
 	};
-	
+
 	enum MTCType { FPS_24, FPS_25, FPS_29_97, FPS_30 };
 	const float MTCFrameRate[4] { 24.f, 25.f, 29.97f, 30.f };
 	const float MTCFrameSecond[4]
@@ -304,11 +303,11 @@ private:
 		1.f / MTCFrameRate[2],
 		1.f / MTCFrameRate[3],
 	};
-	
-	RingQueue<MTCPacket> mtc_packet_ {3};
+
+	MTCPacket mtc_;
 	MTCPacket mtc_buffer_;
 	State state;
+	bool b_available;
 };
-
 
 #endif
