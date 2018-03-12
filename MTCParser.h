@@ -58,6 +58,12 @@ class MTCParser
 		uint8_t frame;
 	};
 
+#ifdef Arduino_h
+	using string_t = String;
+#else
+	using string_t = std::string;
+#endif
+
 public:
 
 	inline bool available() const { return b_available; }
@@ -71,27 +77,27 @@ public:
 
 	inline float asSeconds() const
 	{
-		return mtc_.hour * 60.f * 60.f + mtc_.minute * 60.f + mtc_.second + mtc_.frame * MTCFrameSecond[mtc_.type];
+		return hour() * 60.f * 60.f + minute() * 60.f + second() + frame() * MTCFrameSecond[type()];
 	}
 	inline float asMillis() const { return asSeconds() * 0.001f; }
 	inline float asMicros() const { return asMillis() * 0.001f; }
-	inline int32_t asFrameCount() const { return asSeconds() * MTCFrameRate[mtc_.type]; }
-	inline string asString() const
+	inline int32_t asFrameCount() const { return asSeconds() * MTCFrameRate[type()]; }
+	inline string_t asString() const
 	{
-		stringstream ss;
-
+#ifdef Arduino_h
+		string_t str = string_t(hour()) + ":" + string_t(minute()) + ":" + string_t(second());
 		if (type() == static_cast<uint8_t>(MTCType::FPS_29_97))
-			ss << to_string(hour())   << ":"
-			   << to_string(minute()) << ":"
-			   << to_string(second()) << ";"
-			   << to_string(frame());
+			str += ";" + string_t(frame());
 		else
-			ss << to_string(hour())   << ":"
-			   << to_string(minute()) << ":"
-			   << to_string(second()) << ":"
-			   << to_string(frame());
-
-		return ss.str();
+			str += ":" + string_t(frame());
+#else
+		string_t str = to_string(hour()) + ":" + to_string(minute()) + ":" + to_string(second());
+		if (type() == static_cast<uint8_t>(MTCType::FPS_29_97))
+			str += ";" + to_string(frame());
+		else
+			str += ":" + to_string(frame());
+#endif
+		return str;
 	}
 
 	inline void feed(const uint8_t* const data, const uint8_t size)
@@ -190,7 +196,7 @@ public:
 				}
 				else
 				{
-					ofLogError("MTCParser") << "invalid EOX";
+					// error
 				}
 				state = State::Header;
 				break;
