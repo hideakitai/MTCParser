@@ -80,7 +80,7 @@ public:
 	{
 		stringstream ss;
 
-		if (type() == FPS_29_97)
+		if (type() == static_cast<uint8_t>(MTCType::FPS_29_97))
 			ss << to_string(hour())   << ":"
 			   << to_string(minute()) << ":"
 			   << to_string(second()) << ";"
@@ -106,12 +106,12 @@ public:
 			// common path for FFM & QFM
 			case State::Header:
 			{
-				if (data == FFM_Header_1)
+				if (data == static_cast<uint8_t>(StateFlag::FFM_Header_1))
 				{
 					state = State::FFM_Header_2;
 					clearBuffer();
 				}
-				else if (data == QFM_Header)
+				else if (data == static_cast<uint8_t>(StateFlag::QFM_Header))
 				{
 					state = State::QFM_Value;
 				}
@@ -126,26 +126,34 @@ public:
 			// for Full Frame Message (FFM)
 			case State::FFM_Header_2:
 			{
-				if (data == FFM_Header_2) state = State::FFM_Channel;
-				else state = State::Header;
+				if (data == static_cast<uint8_t>(StateFlag::FFM_Header_2))
+					state = State::FFM_Channel;
+				else
+					state = State::Header;
 				break;
 			}
 			case State::FFM_Channel:
 			{
-				if (data == FFM_Channel) state = State::FFM_ID_1;
-				else state = State::Header;
+				if (data == static_cast<uint8_t>(StateFlag::FFM_Channel))
+					state = State::FFM_ID_1;
+				else
+					state = State::Header;
 				break;
 			}
 			case State::FFM_ID_1:
 			{
-				if (data == FFM_ID_1) state = State::FFM_ID_2;
-				else state = State::Header;
+				if (data == static_cast<uint8_t>(StateFlag::FFM_ID_1))
+					state = State::FFM_ID_2;
+				else
+					state = State::Header;
 				break;
 			}
 			case State::FFM_ID_2:
 			{
-				if (data == FFM_ID_2) state = State::FFM_Hour;
-				else state = State::Header;
+				if (data == static_cast<uint8_t>(StateFlag::FFM_ID_2))
+					state = State::FFM_Hour;
+				else
+					state = State::Header;
 				break;
 			}
 			case State::FFM_Hour:
@@ -175,7 +183,7 @@ public:
 			}
 			case State::FFM_EOX:
 			{
-				if (data == FFM_EOX)
+				if (data == static_cast<uint8_t>(StateFlag::FFM_EOX))
 				{
 					mtc_ = mtc_buffer_;
 					b_available = true;
@@ -196,42 +204,42 @@ public:
 
 				switch (index)
 				{
-					case QFM_Index_Frame_LSB:
+					case static_cast<uint8_t>(StateFlag::QFM_Index_Frame_LSB):
 					{
 						mtc_buffer_.frame = (value & 0x0F);
 						break;
 					}
-					case QFM_Index_Frame_MSB:
+					case static_cast<uint8_t>(StateFlag::QFM_Index_Frame_MSB):
 					{
 						mtc_buffer_.frame |= (value & 0x01) << 4;
 						break;
 					}
-					case QFM_Index_Second_LSB:
+					case static_cast<uint8_t>(StateFlag::QFM_Index_Second_LSB):
 					{
 						mtc_buffer_.second = (value & 0x0F);
 						break;
 					}
-					case QFM_Index_Second_MSB:
+					case static_cast<uint8_t>(StateFlag::QFM_Index_Second_MSB):
 					{
 						mtc_buffer_.second |= (value & 0x03) << 4;
 						break;
 					}
-					case QFM_Index_Minute_LSB:
+					case static_cast<uint8_t>(StateFlag::QFM_Index_Minute_LSB):
 					{
 						mtc_buffer_.minute = (value & 0x0F);
 						break;
 					}
-					case QFM_Index_Minute_MSB:
+					case static_cast<uint8_t>(StateFlag::QFM_Index_Minute_MSB):
 					{
 						mtc_buffer_.minute |= (value & 0x03) << 4;
 						break;
 					}
-					case QFM_Index_Hour_LSB:
+					case static_cast<uint8_t>(StateFlag::QFM_Index_Hour_LSB):
 					{
 						mtc_buffer_.hour = (value & 0x0F);
 						break;
 					}
-					case QFM_Index_Hour_MSB:
+					case static_cast<uint8_t>(StateFlag::QFM_Index_Hour_MSB):
 					{
 						mtc_buffer_.hour |= (value & 0x01) << 4;
 						mtc_buffer_.type = (value >> 1) & 0x03;
@@ -275,7 +283,7 @@ private:
 		// for QFM only
 		QFM_Value
 	};
-	enum StateValues
+	enum class StateFlag
 	{
 		FFM_Header_1 = 0xF0,
 		FFM_Header_2 = 0x7F,
@@ -295,7 +303,7 @@ private:
 		QFM_Index_Hour_MSB = 0x07,
 	};
 
-	enum MTCType { FPS_24, FPS_25, FPS_29_97, FPS_30 };
+	enum class MTCType { FPS_24, FPS_25, FPS_29_97, FPS_30 };
 	const float MTCFrameRate[4] { 24.f, 25.f, 29.97f, 30.f };
 	const float MTCFrameSecond[4]
 	{
