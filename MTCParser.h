@@ -1,3 +1,4 @@
+#pragma once
 #ifndef MTCParser_H
 #define MTCParser_H
 
@@ -93,9 +94,9 @@ public:
 		return ss.str();
 	}
 
-	inline void feed(const uint8_t* const data, const size_t size)
+	inline void feed(const uint8_t* const data, const uint8_t size)
 	{
-		for (size_t i = 0; i < size; ++i) feed(data[i]);
+		for (uint8_t i = 0; i < size; ++i) feed(data[i]);
 	}
 
 	inline void feed(const uint8_t data)
