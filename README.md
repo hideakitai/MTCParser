@@ -17,28 +17,27 @@ None
 ## Usage
 
 ``` c++
-uint8_t* data = getMidiBinaryDataPointer();
-uint8_t size = getMidiBinaryDataSize();
-
+#include "MTCParser.h"
 MTCParser mtc;
-mtc.feed(data, size);
 
-while (mtc.available())
-{
-	// get each time code as uint8_t
-	mtc.type();
-	mtc.hour();
-	mtc.minute();
-	mtc.second();
-	mtc.frame();
-	
-	// get current time as :
-	mtc.asFrameCount();
-	mtc.asSeconds();
-	mtc.asString();
-	
-	// finally go to next time code
-	mtc.pop();
+void setup() {
+    Serial.begin(115200);
+}
+
+void loop() {
+    while (const size_t size = Serial.available()) {
+        uint8_t data[size];
+        Serial.readBytes((char*)data, size);
+
+        mtc.feed(data, size);
+        if (mtc.available()) {
+            Serial.print("MTC    : "); Serial.println(mtc.asString());
+            Serial.print("Type   : "); Serial.println(mtc.type());
+            Serial.print("Frame  : "); Serial.println(mtc.asFrameCount());
+            Serial.print("Second : "); Serial.println(mtc.asSeconds());
+            mtc.pop();
+        }
+    }
 }
 ```
 
